@@ -27,6 +27,22 @@ async function main() {
   // 1. Admin Login (Opening)
   console.log('1. Admin Login & Dashboard...');
   await page.goto('http://localhost:5173/login');
+  
+  // Inject a continuous 1px animation to force browser frame rendering during idle times
+  await page.addStyleTag({ content: `
+    @keyframes forceRender { 100% { transform: rotate(360deg); } }
+    body::after {
+      content: "";
+      position: fixed;
+      bottom: 0; right: 0;
+      width: 1px; height: 1px;
+      background: transparent;
+      animation: forceRender 1s linear infinite;
+      pointer-events: none;
+      z-index: 9999;
+    }
+  `});
+  
   await page.waitForTimeout(1000);
   await page.fill('input[type="email"]', 'admin@erp.com');
   await page.fill('input[type="password"]', 'password123');
