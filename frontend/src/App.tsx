@@ -13,33 +13,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
-function Dashboard() {
-  const { user, logout } = useAuth();
-  return (
-    <div className="p-8 max-w-4xl mx-auto">
-      <div className="flex justify-between items-center mb-8 border-b pb-4">
-        <h1 className="text-3xl font-bold">Mini ERP Dashboard</h1>
-        <button onClick={logout} className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded">Logout</button>
-      </div>
-      <p className="text-lg mb-8">Welcome back, <strong>{user?.name}</strong> ({user?.role})</p>
-      
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Link to="/customers" className="block p-6 bg-white rounded-lg border shadow-sm hover:shadow-md transition">
-          <h2 className="text-xl font-semibold mb-2">Customers</h2>
-          <p className="text-gray-600">Manage clients and leads</p>
-        </Link>
-        <Link to="/products" className="block p-6 bg-white rounded-lg border shadow-sm hover:shadow-md transition">
-          <h2 className="text-xl font-semibold mb-2">Products & Stock</h2>
-          <p className="text-gray-600">Catalog and adjustments</p>
-        </Link>
-        <Link to="/challans" className="block p-6 bg-white rounded-lg border shadow-sm hover:shadow-md transition">
-          <h2 className="text-xl font-semibold mb-2">Challans</h2>
-          <p className="text-gray-600">Sales workflows</p>
-        </Link>
-      </div>
-    </div>
-  );
-}
+import Dashboard from './pages/Dashboard';
 
 function App() {
   return (

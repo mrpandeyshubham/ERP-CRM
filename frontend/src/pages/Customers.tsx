@@ -47,7 +47,7 @@ export default function Customers() {
       if (statusFilter) params.status = statusFilter;
       const res = await api.get('/customers', { params });
       setCustomers(res.data.data);
-      setTotal(res.data.total);
+      setTotal(res.data.total || 0);
     } catch { /* ignore */ }
   }, [page, search, statusFilter]);
 
@@ -108,144 +108,178 @@ export default function Customers() {
   const pages = Math.ceil(total / limit);
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Customers</h1>
-        {canEdit && (
-          <button onClick={openAdd}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium">
-            + Add Customer
-          </button>
+    <>
+      {/* Page Header & Actions */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-lg space-y-md sm:space-y-0">
+        <div>
+          <h1 className="font-headline-md text-[length:var(--text-headline-md)] font-[var(--text-headline-md--font-weight)] text-primary mb-1">Customers</h1>
+          <p className="font-body-sm text-[length:var(--text-body-sm)] text-on-surface-variant">Manage your retail, wholesale, and distributor accounts.</p>
+        </div>
+        <div className="flex flex-wrap items-center gap-sm w-full sm:w-auto">
+          {/* Search */}
+          <div className="relative flex-grow sm:flex-grow-0 sm:w-64">
+            <span className="material-symbols-outlined absolute left-sm top-1/2 -translate-y-1/2 text-on-surface-variant text-[18px]">search</span>
+            <input 
+              className="w-full pl-[36px] pr-md py-[8px] bg-surface-container-lowest border border-outline-variant rounded focus:border-secondary focus:ring-2 focus:ring-secondary/10 font-body-sm text-body-sm text-on-surface outline-none transition-all" 
+              placeholder="Search customers..." 
+              type="text"
+              value={search}
+              onChange={e => { setSearch(e.target.value); setPage(1); }}
+            />
+          </div>
+          {/* Filter */}
+          <select 
+            value={statusFilter}
+            onChange={e => { setStatusFilter(e.target.value); setPage(1); }}
+            className="flex items-center space-x-xs px-md py-[8px] bg-surface-container-lowest border border-outline-variant rounded text-on-surface-variant hover:border-secondary transition-colors font-label-caps text-[length:var(--text-label-caps)] tracking-[var(--text-label-caps--letter-spacing)] shrink-0 outline-none cursor-pointer">
+            <option value="">All Statuses</option>
+            {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
+          </select>
+          {/* Add Action */}
+          {canEdit && (
+            <button onClick={openAdd} className="flex items-center space-x-xs px-md py-[8px] bg-primary border border-primary text-on-primary rounded hover:bg-tertiary-container transition-colors font-label-caps text-[length:var(--text-label-caps)] shrink-0 shadow-sm">
+              <span className="material-symbols-outlined text-[16px]">add</span>
+              <span>Add Customer</span>
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Data Table Container */}
+      <div className="bg-surface-container-lowest border border-outline-variant rounded-lg overflow-hidden flex flex-col">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse min-w-[900px]">
+            <thead>
+              <tr className="bg-[#F1F5F9] border-b border-outline-variant">
+                <th className="px-md py-[10px] font-label-caps text-[length:var(--text-label-caps)] text-on-surface-variant">Name</th>
+                <th className="px-md py-[10px] font-label-caps text-[length:var(--text-label-caps)] text-on-surface-variant">Business Name</th>
+                <th className="px-md py-[10px] font-label-caps text-[length:var(--text-label-caps)] text-on-surface-variant">Mobile</th>
+                <th className="px-md py-[10px] font-label-caps text-[length:var(--text-label-caps)] text-on-surface-variant">Email</th>
+                <th className="px-md py-[10px] font-label-caps text-[length:var(--text-label-caps)] text-on-surface-variant">Customer Type</th>
+                <th className="px-md py-[10px] font-label-caps text-[length:var(--text-label-caps)] text-on-surface-variant">Status</th>
+                {canEdit && <th className="px-md py-[10px] font-label-caps text-[length:var(--text-label-caps)] text-on-surface-variant text-right">Actions</th>}
+              </tr>
+            </thead>
+            <tbody className="font-body-sm text-[length:var(--text-body-sm)] divide-y divide-outline-variant">
+              {customers.map((c, i) => (
+                <tr key={c.id} onClick={() => openDetail(c)} className={`cursor-pointer hover:border-secondary hover:border-l-2 hover:-ml-[2px] transition-all group ${i % 2 === 1 ? 'bg-[#F8FAFC]' : 'bg-surface-container-lowest'}`}>
+                  <td className="px-md py-sm font-title-sm text-[14px] text-primary">{c.name}</td>
+                  <td className="px-md py-sm text-on-surface-variant">{c.businessName || '-'}</td>
+                  <td className="px-md py-sm font-data-mono text-[length:var(--text-data-mono)] text-on-surface-variant">{c.mobile}</td>
+                  <td className="px-md py-sm text-on-surface-variant truncate max-w-[200px]">{c.email || '-'}</td>
+                  <td className="px-md py-sm">
+                    <span className="inline-flex items-center px-[8px] py-[2px] rounded-full text-[11px] font-semibold bg-surface-variant text-on-surface-variant border border-outline-variant">
+                      {c.customerType}
+                    </span>
+                  </td>
+                  <td className="px-md py-sm">
+                    {c.status === 'ACTIVE' ? (
+                      <span className="inline-flex items-center px-[8px] py-[2px] rounded-full text-[11px] font-semibold bg-[#E6F4EA] text-[#137333]">Active</span>
+                    ) : c.status === 'INACTIVE' ? (
+                      <span className="inline-flex items-center px-[8px] py-[2px] rounded-full text-[11px] font-semibold bg-[#F1F3F4] text-[#5F6368]">Inactive</span>
+                    ) : (
+                      <span className="inline-flex items-center px-[8px] py-[2px] rounded-full text-[11px] font-semibold bg-[#E8F0FE] text-[#1967D2]">Lead</span>
+                    )}
+                  </td>
+                  {canEdit && (
+                    <td className="px-md py-sm text-right" onClick={e => e.stopPropagation()}>
+                      <button onClick={() => openEdit(c)} className="text-on-surface-variant hover:text-primary transition-colors p-xs flex items-center justify-end w-full">
+                        <span className="material-symbols-outlined text-[18px]">edit</span>
+                      </button>
+                    </td>
+                  )}
+                </tr>
+              ))}
+              {customers.length === 0 && (
+                <tr>
+                  <td colSpan={canEdit ? 7 : 6} className="px-md py-8 text-center text-on-surface-variant font-body-sm">
+                    No customers found matching your criteria.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+        
+        {/* Pagination */}
+        {pages > 0 && (
+          <div className="px-md py-sm border-t border-outline-variant bg-[#F1F5F9] flex justify-between items-center text-[length:var(--text-body-sm)] font-[var(--text-body-sm--font-weight)]">
+            <span className="text-on-surface-variant">Showing page {page} of {pages} ({total} total)</span>
+            <div className="flex space-x-xs">
+              <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="px-sm py-xs border border-outline-variant rounded bg-surface-container-lowest text-on-surface-variant hover:bg-surface-variant disabled:opacity-50">Previous</button>
+              <button onClick={() => setPage(p => Math.min(pages, p + 1))} disabled={page === pages} className="px-sm py-xs border border-outline-variant rounded bg-surface-container-lowest text-on-surface-variant hover:bg-surface-variant disabled:opacity-50">Next</button>
+            </div>
+          </div>
         )}
       </div>
 
-      <div className="flex gap-3 mb-4">
-        <input
-          type="text" placeholder="Search name, business, mobile..." value={search}
-          onChange={e => { setSearch(e.target.value); setPage(1); }}
-          className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
-        />
-        <select value={statusFilter} onChange={e => { setStatusFilter(e.target.value); setPage(1); }}
-          className="border border-gray-300 rounded-lg px-3 py-2 text-sm">
-          <option value="">All statuses</option>
-          {STATUSES.map(s => <option key={s}>{s}</option>)}
-        </select>
-      </div>
-
-      <div className="bg-white rounded-xl shadow overflow-hidden">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Business</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Mobile</th>
-              {canEdit && <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase text-right">Actions</th>}
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-100">
-            {customers.map(c => (
-              <tr key={c.id} className="hover:bg-gray-50 cursor-pointer" onClick={() => openDetail(c)}>
-                <td className="px-6 py-4 text-sm font-medium text-gray-900">{c.name}</td>
-                <td className="px-6 py-4 text-sm text-gray-500">{c.businessName || '-'}</td>
-                <td className="px-6 py-4 text-sm text-gray-500">{c.customerType}</td>
-                <td className="px-6 py-4">
-                  <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${
-                    c.status === 'ACTIVE' ? 'bg-green-100 text-green-700' :
-                    c.status === 'INACTIVE' ? 'bg-gray-100 text-gray-600' : 'bg-yellow-100 text-yellow-700'
-                  }`}>{c.status}</span>
-                </td>
-                <td className="px-6 py-4 text-sm text-gray-500">{c.mobile}</td>
-                {canEdit && (
-                  <td className="px-6 py-4 text-right" onClick={e => e.stopPropagation()}>
-                    <button onClick={() => openEdit(c)} className="text-blue-600 hover:underline text-sm">Edit</button>
-                  </td>
-                )}
-              </tr>
-            ))}
-            {customers.length === 0 && (
-              <tr><td colSpan={canEdit ? 6 : 5} className="px-6 py-8 text-center text-gray-400 text-sm">No customers found</td></tr>
-            )}
-          </tbody>
-        </table>
-      </div>
-
-      {pages > 1 && (
-        <div className="flex justify-center gap-2 mt-4">
-          {Array.from({ length: pages }, (_, i) => (
-            <button key={i} onClick={() => setPage(i + 1)}
-              className={`px-3 py-1 rounded text-sm ${page === i + 1 ? 'bg-blue-600 text-white' : 'bg-white border text-gray-600'}`}>
-              {i + 1}
-            </button>
-          ))}
-        </div>
-      )}
-
+      {/* Modals for Add/Edit/View (Using basic tailwind for structural modals as per prior version) */}
       {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-lg">
-            <div className="flex justify-between items-center p-6 border-b">
-              <h2 className="text-lg font-bold">{editing ? 'Edit Customer' : 'Add Customer'}</h2>
-              <button onClick={() => setShowModal(false)} className="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
+        <div className="fixed inset-0 bg-inverse-surface/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-surface-container-lowest rounded-xl shadow-xl w-full max-w-lg border border-outline-variant">
+            <div className="flex justify-between items-center p-6 border-b border-outline-variant">
+              <h2 className="font-title-sm text-[length:var(--text-title-sm)] text-primary">{editing ? 'Edit Customer' : 'Add Customer'}</h2>
+              <button onClick={() => setShowModal(false)} className="text-on-surface-variant hover:text-primary transition-colors">
+                <span className="material-symbols-outlined">close</span>
+              </button>
             </div>
             <form onSubmit={save} className="p-6 space-y-4">
-              {error && <div className="text-red-500 text-sm bg-red-50 rounded p-2">{error}</div>}
+              {error && <div className="text-error bg-error-container rounded p-2 text-sm">{error}</div>}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Name *</label>
+                  <label className="block font-label-caps text-[length:var(--text-label-caps)] text-on-surface-variant mb-1">Name *</label>
                   <input required value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400" />
+                    className="w-full border border-outline-variant rounded px-3 py-2 text-[length:var(--text-body-sm)] focus:outline-none focus:border-secondary focus:ring-1 focus:ring-secondary" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Mobile *</label>
+                  <label className="block font-label-caps text-[length:var(--text-label-caps)] text-on-surface-variant mb-1">Mobile *</label>
                   <input required value={form.mobile} onChange={e => setForm(f => ({ ...f, mobile: e.target.value }))}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" />
+                    className="w-full border border-outline-variant rounded px-3 py-2 text-[length:var(--text-body-sm)] focus:outline-none focus:border-secondary focus:ring-1 focus:ring-secondary" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                  <label className="block font-label-caps text-[length:var(--text-label-caps)] text-on-surface-variant mb-1">Email</label>
                   <input type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" />
+                    className="w-full border border-outline-variant rounded px-3 py-2 text-[length:var(--text-body-sm)] focus:outline-none focus:border-secondary focus:ring-1 focus:ring-secondary" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Business Name</label>
+                  <label className="block font-label-caps text-[length:var(--text-label-caps)] text-on-surface-variant mb-1">Business Name</label>
                   <input value={form.businessName} onChange={e => setForm(f => ({ ...f, businessName: e.target.value }))}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" />
+                    className="w-full border border-outline-variant rounded px-3 py-2 text-[length:var(--text-body-sm)] focus:outline-none focus:border-secondary focus:ring-1 focus:ring-secondary" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Type *</label>
+                  <label className="block font-label-caps text-[length:var(--text-label-caps)] text-on-surface-variant mb-1">Type *</label>
                   <select value={form.customerType} onChange={e => setForm(f => ({ ...f, customerType: e.target.value }))}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
+                    className="w-full border border-outline-variant rounded px-3 py-2 text-[length:var(--text-body-sm)] focus:outline-none focus:border-secondary focus:ring-1 focus:ring-secondary">
                     {TYPES.map(t => <option key={t}>{t}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                  <label className="block font-label-caps text-[length:var(--text-label-caps)] text-on-surface-variant mb-1">Status</label>
                   <select value={form.status} onChange={e => setForm(f => ({ ...f, status: e.target.value }))}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
+                    className="w-full border border-outline-variant rounded px-3 py-2 text-[length:var(--text-body-sm)] focus:outline-none focus:border-secondary focus:ring-1 focus:ring-secondary">
                     {STATUSES.map(s => <option key={s}>{s}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">GST Number</label>
+                  <label className="block font-label-caps text-[length:var(--text-label-caps)] text-on-surface-variant mb-1">GST Number</label>
                   <input value={form.gstNumber} onChange={e => setForm(f => ({ ...f, gstNumber: e.target.value }))}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" />
+                    className="w-full border border-outline-variant rounded px-3 py-2 text-[length:var(--text-body-sm)] focus:outline-none focus:border-secondary focus:ring-1 focus:ring-secondary" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Follow-up Date</label>
+                  <label className="block font-label-caps text-[length:var(--text-label-caps)] text-on-surface-variant mb-1">Follow-up Date</label>
                   <input type="date" value={form.followUpDate} onChange={e => setForm(f => ({ ...f, followUpDate: e.target.value }))}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" />
+                    className="w-full border border-outline-variant rounded px-3 py-2 text-[length:var(--text-body-sm)] focus:outline-none focus:border-secondary focus:ring-1 focus:ring-secondary" />
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
+                <label className="block font-label-caps text-[length:var(--text-label-caps)] text-on-surface-variant mb-1">Address</label>
                 <textarea rows={2} value={form.address} onChange={e => setForm(f => ({ ...f, address: e.target.value }))}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" />
+                  className="w-full border border-outline-variant rounded px-3 py-2 text-[length:var(--text-body-sm)] focus:outline-none focus:border-secondary focus:ring-1 focus:ring-secondary" />
               </div>
-              <div className="flex justify-end gap-3 pt-2">
+              <div className="flex justify-end gap-3 pt-4">
                 <button type="button" onClick={() => setShowModal(false)}
-                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg text-sm hover:bg-gray-50">Cancel</button>
-                <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700">
+                  className="px-4 py-2 border border-outline-variant text-on-surface-variant rounded-DEFAULT text-[length:var(--text-label-caps)] font-label-caps hover:bg-surface-variant transition-colors">Cancel</button>
+                <button type="submit" className="px-4 py-2 bg-primary text-on-primary rounded-DEFAULT text-[length:var(--text-label-caps)] font-label-caps hover:bg-primary-container transition-colors">
                   {editing ? 'Save Changes' : 'Add Customer'}
                 </button>
               </div>
@@ -255,44 +289,49 @@ export default function Customers() {
       )}
 
       {selected && (
-        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-start justify-end z-50">
-          <div className="bg-white h-full w-full max-w-md shadow-xl overflow-y-auto">
-            <div className="flex justify-between items-center p-6 border-b sticky top-0 bg-white">
-              <h2 className="text-lg font-bold text-gray-900">{selected.name}</h2>
-              <button onClick={() => setSelected(null)} className="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
+        <div className="fixed inset-0 bg-inverse-surface/50 flex items-start justify-end z-50">
+          <div className="bg-surface-container-lowest h-full w-full max-w-md shadow-xl overflow-y-auto border-l border-outline-variant">
+            <div className="flex justify-between items-center p-6 border-b border-outline-variant sticky top-0 bg-surface-container-lowest">
+              <h2 className="font-title-sm text-[length:var(--text-title-sm)] text-primary">{selected.name}</h2>
+              <button onClick={() => setSelected(null)} className="text-on-surface-variant hover:text-primary transition-colors">
+                <span className="material-symbols-outlined">close</span>
+              </button>
             </div>
-            <div className="p-6 space-y-4">
-              <dl className="grid grid-cols-2 gap-3 text-sm">
-                <div><dt className="font-medium text-gray-500">Type</dt><dd className="text-gray-900">{selected.customerType}</dd></div>
-                <div><dt className="font-medium text-gray-500">Status</dt><dd className="text-gray-900">{selected.status}</dd></div>
-                <div><dt className="font-medium text-gray-500">Mobile</dt><dd className="text-gray-900">{selected.mobile}</dd></div>
-                <div><dt className="font-medium text-gray-500">Email</dt><dd className="text-gray-900">{selected.email || '-'}</dd></div>
-                <div><dt className="font-medium text-gray-500">Business</dt><dd className="text-gray-900">{selected.businessName || '-'}</dd></div>
-                <div><dt className="font-medium text-gray-500">GST</dt><dd className="text-gray-900">{selected.gstNumber || '-'}</dd></div>
+            <div className="p-6 space-y-6">
+              <dl className="grid grid-cols-2 gap-4">
+                <div><dt className="font-label-caps text-[length:var(--text-label-caps)] text-on-surface-variant">Type</dt><dd className="text-primary font-body-sm">{selected.customerType}</dd></div>
+                <div><dt className="font-label-caps text-[length:var(--text-label-caps)] text-on-surface-variant">Status</dt><dd className="text-primary font-body-sm">{selected.status}</dd></div>
+                <div><dt className="font-label-caps text-[length:var(--text-label-caps)] text-on-surface-variant">Mobile</dt><dd className="text-primary font-data-mono">{selected.mobile}</dd></div>
+                <div><dt className="font-label-caps text-[length:var(--text-label-caps)] text-on-surface-variant">Email</dt><dd className="text-primary font-body-sm">{selected.email || '-'}</dd></div>
+                <div><dt className="font-label-caps text-[length:var(--text-label-caps)] text-on-surface-variant">Business</dt><dd className="text-primary font-body-sm">{selected.businessName || '-'}</dd></div>
+                <div><dt className="font-label-caps text-[length:var(--text-label-caps)] text-on-surface-variant">GST</dt><dd className="text-primary font-data-mono">{selected.gstNumber || '-'}</dd></div>
               </dl>
 
-              <div className="border-t pt-4">
-                <h3 className="font-semibold text-gray-900 mb-3">Follow-up notes</h3>
-                <div className="space-y-2 mb-3 max-h-48 overflow-y-auto">
+              <div className="border-t border-outline-variant pt-6">
+                <h3 className="font-title-sm text-[length:var(--text-title-sm)] text-primary mb-4">Follow-up notes</h3>
+                <div className="space-y-3 mb-4 max-h-48 overflow-y-auto">
                   {(selected.notes || []).map(n => (
-                    <div key={n.id} className="bg-gray-50 rounded p-3 text-sm">
-                      <p className="text-gray-800">{n.note}</p>
-                      <p className="text-gray-400 text-xs mt-1">{n.createdBy} · {new Date(n.createdAt).toLocaleDateString()}</p>
+                    <div key={n.id} className="bg-surface-variant rounded p-3">
+                      <p className="text-on-surface text-[length:var(--text-body-sm)]">{n.note}</p>
+                      <p className="text-on-surface-variant text-[length:var(--text-label-caps)] font-label-caps mt-2 flex justify-between">
+                        <span>{n.createdBy}</span>
+                        <span>{new Date(n.createdAt).toLocaleDateString()}</span>
+                      </p>
                     </div>
                   ))}
-                  {(selected.notes || []).length === 0 && <p className="text-gray-400 text-sm">No notes yet</p>}
+                  {(selected.notes || []).length === 0 && <p className="text-on-surface-variant text-[length:var(--text-body-sm)]">No notes yet</p>}
                 </div>
                 <div className="flex gap-2">
                   <input value={noteText} onChange={e => setNoteText(e.target.value)}
                     placeholder="Add a note..."
-                    className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm" />
-                  <button onClick={addNote} className="px-3 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700">Add</button>
+                    className="flex-1 border border-outline-variant rounded px-3 py-2 text-[length:var(--text-body-sm)] focus:outline-none focus:border-secondary focus:ring-1 focus:ring-secondary" />
+                  <button onClick={addNote} className="px-4 py-2 bg-secondary text-on-secondary rounded text-[length:var(--text-label-caps)] font-label-caps hover:bg-secondary-container hover:text-on-secondary-container transition-colors">Add</button>
                 </div>
               </div>
             </div>
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 }

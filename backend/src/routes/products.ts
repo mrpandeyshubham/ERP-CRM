@@ -43,12 +43,14 @@ router.get('/', async (req, res, next) => {
     }
     if (category) where.category = category;
     
-    let products = await prisma.product.findMany({ where, skip, take, orderBy: { createdAt: 'desc' } });
+    let products = await prisma.product.findMany({ where, orderBy: { createdAt: 'desc' } });
     if (lowStock === 'true') {
       products = products.filter(p => p.currentStock <= p.minStockAlert);
     }
     
-    const total = await prisma.product.count({ where });
+    const total = products.length;
+    products = products.slice(skip, skip + take);
+    
     res.json({ data: products, total, page: Number(page), limit: take });
   } catch (err) { next(err); }
 });

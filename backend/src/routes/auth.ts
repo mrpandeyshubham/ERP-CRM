@@ -4,8 +4,17 @@ import { signAccessToken } from '../middleware/auth';
 import { prisma } from '../utils/db';
 import { z } from 'zod';
 import { validate } from '../middleware/validate';
+import rateLimit from 'express-rate-limit';
 
 const router = Router();
+
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 10, // Limit each IP to 10 login requests per windowMs
+  message: { error: 'Too many login attempts from this IP, please try again after 15 minutes' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 
 const loginSchema = z.object({
   body: z.object({
@@ -14,7 +23,7 @@ const loginSchema = z.object({
   }),
 });
 
-router.post('/login', validate(loginSchema), async (req, res, next) => {
+router.post('/login', loginLimiter, validate(loginSchema), async (req, res, next) => {
   try {
     const { email, password } = req.body;
     const user = await prisma.user.findUnique({

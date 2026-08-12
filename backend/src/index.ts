@@ -1,18 +1,16 @@
 import express from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
 import authRoutes from './routes/auth';
 import customerRoutes from './routes/customers';
 import productRoutes from './routes/products';
 import challanRoutes from './routes/challans';
 import { errorHandler } from './utils/errors';
 
-dotenv.config();
-
 const app = express();
 const PORT = process.env.PORT || 4000;
+const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
 
-app.use(cors());
+app.use(cors({ origin: FRONTEND_URL }));
 app.use(express.json());
 
 // Basic health check

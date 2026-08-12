@@ -2,6 +2,7 @@
 FROM node:20-alpine AS build
 WORKDIR /app
 COPY package*.json ./
+COPY prisma ./prisma/
 RUN npm ci
 COPY . .
 RUN npm run build # Note: requires setting up a build script that transpiles TS

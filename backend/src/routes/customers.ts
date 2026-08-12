@@ -17,6 +17,7 @@ const customerSchema = z.object({
     customerType: z.enum(['RETAIL', 'WHOLESALE', 'DISTRIBUTOR']),
     address: z.string().optional().nullable(),
     status: z.enum(['LEAD', 'ACTIVE', 'INACTIVE']).optional(),
+    followUpDate: z.string().datetime().optional().nullable(),
   }),
 });
 
@@ -26,7 +27,7 @@ const noteSchema = z.object({
   }),
 });
 
-router.get('/', async (req, res, next) => {
+router.get('/', requireRole('ADMIN', 'SALES', 'ACCOUNTS'), async (req, res, next) => {
   try {
     const { search, status, customerType, page = '1', limit = '10' } = req.query;
     const skip = (Number(page) - 1) * Number(limit);
@@ -59,7 +60,7 @@ router.post('/', requireRole('ADMIN', 'SALES'), validate(customerSchema), async 
   } catch (err) { next(err); }
 });
 
-router.get('/:id', async (req, res, next) => {
+router.get('/:id', requireRole('ADMIN', 'SALES', 'ACCOUNTS'), async (req, res, next) => {
   try {
     const customer = await prisma.customer.findUnique({
       where: { id: String(req.params.id) },
