@@ -1,6 +1,35 @@
 # Mini ERP + CRM Operations Portal
 
+*This project is a submission for the Fundsroom Infotech Pvt. Ltd. Full Stack Developer case study.*
+
 A full-stack ERP/CRM for a wholesale/distribution company.
+
+## Known Limitations
+
+Please see [LIMITATIONS.md](./LIMITATIONS.md) for a detailed, honest breakdown of the submission requirements, what was completed, and what parts were omitted or simplified.
+
+## Postman Collection
+
+A full Postman collection covering all backend routes (with built-in token management for all 4 roles) is included at the root: [postman_collection.json](./postman_collection.json).
+Import this file into Postman, and the login endpoints will automatically set the appropriate role token for subsequent requests.
+
+## Architecture
+
+- **Frontend**: A React SPA built with Vite and Tailwind CSS. It communicates securely with the backend via REST APIs.
+- **Backend**: A Node.js/Express service providing RESTful endpoints, secured via JWT middleware with strict Role-Based Access Control (RBAC).
+- **Database**: PostgreSQL accessed via Prisma ORM.
+- **Challan Transaction Logic**: Creating a confirmed challan (or confirming a draft) requires atomic database updates to reduce product stock and record the challan. This logic lives entirely within the backend controllers (`challans.ts`) wrapped inside Prisma `$transaction` blocks to prevent race conditions or negative stock.
+
+## Test Credentials
+
+The database seed provides 4 default users, one for each role:
+
+| Role | Email | Password |
+| :--- | :--- | :--- |
+| **Admin** | `admin@erp.com` | `password123` |
+| **Sales** | `sales@erp.com` | `password123` |
+| **Warehouse** | `warehouse@erp.com` | `password123` |
+| **Accounts** | `accounts@erp.com` | `password123` |
 
 ## Tech Stack
 - Backend: Node.js, Express, Prisma, PostgreSQL
