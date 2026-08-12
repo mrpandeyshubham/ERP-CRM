@@ -89,9 +89,9 @@ The database seed script uses the following public datasets:
 - **Products**: Mock eCommerce Products from [Vendure Mock Data](https://github.com/vendure-ecommerce/vendure/blob/master/packages/core/mock-data/data-sources/products.csv) (MIT License).
 
 
-## Project Structure
+### Project Structure
 
-\\\	ext
+```text
 mini-erp-crm/
 ├── backend/                 # Node.js + Express backend
 │   ├── prisma/              # Prisma schema and seed scripts
@@ -116,29 +116,28 @@ mini-erp-crm/
 ├── AUDIT_FINAL.md           # Implementation audit
 ├── postman_collection.json  # Postman API testing collection
 └── README.md                # This file
-\\\`n
+```
+
 ## Documentation
 
 ### How the Server Was Set Up
 - The backend is a standard Node.js/Express application written in TypeScript.
 - Prisma is used as the ORM to communicate with a PostgreSQL database.
-- Routing is modularized under \ackend/src/routes/\ and secured using JWT authentication middleware.
+- Routing is modularized under `backend/src/routes/` and secured using JWT authentication middleware.
 - The frontend is a React Single Page Application (SPA) bootstrapped with Vite and styled via Tailwind CSS.
 
 ### How Environment Variables Are Managed
-- Environment variables are isolated from the codebase using \.env\ files.
-- A \.env.example\ is provided in the \ackend\ directory to illustrate the required keys (e.g., \DATABASE_URL\, \JWT_SECRET\).
+- Environment variables are isolated from the codebase using `.env` files.
+- A `.env.example` is provided in the `backend` directory to illustrate the required keys (e.g., `DATABASE_URL`, `JWT_SECRET`).
 - In production, these should be securely injected via the hosting provider's secret management system.
 
 ### How to Deploy the Project
 This project is currently structured for local development but can easily be deployed:
-- **Database**: Spin up a managed PostgreSQL instance (e.g., Supabase, Neon, AWS RDS) and update the \DATABASE_URL\ env variable.
-- **Backend**: Can be containerized using the provided \Dockerfile\ and deployed to platforms like Render, Railway, or AWS ECS/AppRunner.
-- **Frontend**: Run \
-pm run build\ to generate static assets and host them on platforms like Vercel, Netlify, or AWS S3/CloudFront.
+- **Database**: Spin up a managed PostgreSQL instance (e.g., Supabase, Neon, AWS RDS) and update the `DATABASE_URL` env variable.
+- **Backend**: Can be containerized using the provided `Dockerfile` and deployed to platforms like Render, Railway, or AWS ECS/AppRunner.
+- **Frontend**: Run `npm run build` to generate static assets and host them on platforms like Vercel, Netlify, or AWS S3/CloudFront.
 
 ### Assumptions Made
 - **RBAC Strictness**: It is assumed that WAREHOUSE users have zero need to read customer data, while SALES users can freely view but not modify products.
 - **Snapshotting**: For the sake of simplicity, full deep-copy snapshotting of a product's price at the time of a challan creation is substituted by simple tracking of total quantity and relational mapping.
 - **Rate Limiting**: A simple in-memory rate limiter is used on the login route to deter brute-force attacks, assuming a single backend instance. A distributed cache (e.g., Redis) would be required for horizontally scaled environments.
-
